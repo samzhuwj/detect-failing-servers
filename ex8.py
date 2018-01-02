@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as scio
 
-import estimateGaussian as eg
-import multivariateGaussian as mvg
-import visualizeFit as vf
-import selectThreshold as st
+from estimateGaussian import estimate_gaussian
+from multivariateGaussian import multivariate_gaussian
+from visualizeFit import visualize_fit
+from selectThreshold import select_threshold
 
 
 plt.ion()
@@ -18,8 +18,6 @@ plt.ion()
 # Our example case consists of two network server statistics across
 # several machines: the latency and throughput of each machine.
 # This exercise will help us find possibly faulty (or very fast) machines
-#
-
 print('Visualizing example dataset for outlier detection.')
 
 #  The following command loads the dataset. You should now have the
@@ -46,17 +44,16 @@ input('Program paused. Press ENTER to continue')
 # then compute the probabilities for each of the points and then visualize
 # both the overall distribution and where each of the points falls in
 # terms of that distribution
-#
 print('Visualizing Gaussian fit.')
 
 # Estimate mu and sigma2
-mu, sigma2 = eg.estimate_gaussian(X)
+mu, sigma2 = estimate_gaussian(X)
 
 # Returns the density of the multivariate normal at each data point(row) of X
-p = mvg.multivariate_gaussian(X, mu, sigma2)
+p = multivariate_gaussian(X, mu, sigma2)
 
 # Visualize the fit
-vf.visualize_fit(X, mu, sigma2)
+visualize_fit(X, mu, sigma2)
 plt.xlabel('Latency (ms)')
 plt.ylabel('Throughput (mb/s')
 
@@ -66,16 +63,15 @@ input('Program paused. Press ENTER to continue')
 # ===================== Part 3: Find Outliers =====================
 # Now you will find a good epsilon threshold using a cross-validation set
 # probabilities given the estimated Gaussian distribution
-#
-pval = mvg.multivariate_gaussian(Xval, mu, sigma2)
+pval = multivariate_gaussian(Xval, mu, sigma2)
+epsilon, f1 = select_threshold(yval, pval)
 
-epsilon, f1 = st.select_threshold(yval, pval)
 print('Best epsilon found using cross-validation: {:0.4e}'.format(epsilon))
 print('Best F1 on Cross Validation Set: {:0.6f}'.format(f1))
 print('(you should see a value epsilon of about 8.99e-05 and F1 of about 0.875)')
 
 # Find outliers in the training set and plot
-outliers = np.where(p < epsilon)
+outliers = np.where(p<epsilon)
 plt.scatter(X[outliers, 0], X[outliers, 1], marker='o', facecolors='none', edgecolors='r')
 
 input('Program paused. Press ENTER to continue')
@@ -85,7 +81,6 @@ input('Program paused. Press ENTER to continue')
 # We will now use the code from the previous part and apply it to a
 # harder problem in which more features describe each datapoint and only
 # some features indicate whether a point is an outlier.
-#
 
 # Loads the second dataset.
 data = scio.loadmat('ex8data2.mat')
@@ -94,16 +89,16 @@ Xval = data['Xval']
 yval = data['yval'].flatten()
 
 # Apply the same steps to the larger dataset
-mu, sigma2 = eg.estimate_gaussian(X)
+mu, sigma2 = estimate_gaussian(X)
 
 # Training set
-p = mvg.multivariate_gaussian(X, mu, sigma2)
+p = multivariate_gaussian(X, mu, sigma2)
 
 # Cross Validation set
-pval = mvg.multivariate_gaussian(Xval, mu, sigma2)
+pval = multivariate_gaussian(Xval, mu, sigma2)
 
 # Find the best threshold
-epsilon, f1 = st.select_threshold(yval, pval)
+epsilon, f1 = select_threshold(yval, pval)
 
 print('Best epsilon found using cross-validation: {:0.4e}'.format(epsilon))
 print('Best F1 on Cross Validation Set: {:0.6f}'.format(f1))
